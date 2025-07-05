@@ -1,6 +1,6 @@
 ---
 
-##🌹Author 
+## Author 
 
 **Name:** Olwethu Zulu
 **LinkedIn:** www.linkedin.com/in/olwethu-zulu-3b1043218
