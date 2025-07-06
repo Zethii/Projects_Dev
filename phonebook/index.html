@@ -104,9 +104,11 @@
                 });
             }
 
-            function addContact() {
-                window.open("add-contact.html", "_self");
-            }
+            // Example: If you ever need to watch for DOM changes, use MutationObserver like this:
+            // const observer = new MutationObserver((mutationsList, observer) => {
+            //     // handle mutations
+            // });
+            // observer.observe(document.getElementById("table"), { childList: true, subtree: true });
 
             function editContact(id) {
                 window.open("edit-contact.html?id=" + id, "_self");
