@@ -1,0 +1,370 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>ZuluMode</title>
+  <style>
+    body {
+      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+      margin: 0;
+      padding: 0;
+      display: flex;
+      height: 100vh;
+      background-color: #1e1e1e;
+      color: #fff;
+    }
+    .sidebar {
+      width: 220px;
+      background: #2c2c2c;
+      padding-top: 30px;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      overflow-y: auto;
+    }
+    .sidebar h2 {
+      margin-bottom: 20px;
+      color: gray;
+    }
+    .sidebar a {
+      color: #ccc;
+      text-decoration: none;
+      margin: 8px 0;
+      font-size: 15px;
+      cursor: pointer;
+    }
+    .sidebar a:hover {
+      color: #f0c674;
+    }
+    .main {
+      flex-grow: 1;
+      padding: 20px;
+      overflow-y: auto;
+      width: 100%;
+    }
+    header {
+      text-align: center;
+      margin-bottom: 20px;
+    }
+    header h1 {
+      font-size: 36px;
+      color: blueviolet;
+    }
+    form,
+    .search-container {
+      text-align: center;
+      margin-bottom: 20px;
+    }
+    input[type='text'],
+    input[type='file'],
+    #searchInput {
+      padding: 10px;
+      margin: 5px;
+      border: none;
+      border-radius: 5px;
+      font-size: 14px;
+    }
+    button {
+      background: #f0c674;
+      color: #1e1e1e;
+      padding: 10px 15px;
+      border: none;
+      cursor: pointer;
+      border-radius: 5px;
+      font-weight: bold;
+    }
+    .product-container {
+      display: flex;
+      flex-wrap: wrap;
+      justify-content: center;
+    }
+    .product {
+      width: 200px;
+      background: #2c2c2c;
+      border-radius: 8px;
+      margin: 10px;
+      padding: 10px;
+      text-align: center;
+      position: relative;
+    }
+    .product img {
+      width: 100%;
+      height: 200px;
+      object-fit: cover;
+      border-radius: 5px;
+    }
+    .product h3 {
+      margin: 10px 0;
+      color: #fff;
+    }
+    .product button {
+      background: #e74c3c;
+      color: white;
+      margin-top: 10px;
+    }
+    .cart-button {
+      background: #3498db;
+      color: white;
+      margin-top: 5px;
+    }
+    .cart {
+      position: fixed;
+      right: 20px;
+      bottom: 20px;
+      background: #2c2c2c;
+      padding: 15px;
+      border-radius: 10px;
+      color: #fff;
+      display: none;
+      z-index: 1000;
+      max-width: 300px;
+      max-height: 400px;
+      overflow-y: auto;
+    }
+    @media (max-width: 768px) {
+      body {
+        flex-direction: column;
+      }
+      .sidebar {
+        width: 100%;
+        flex-direction: row;
+        flex-wrap: wrap;
+        justify-content: space-around;
+      }
+      .main {
+        width: 100%;
+      }
+    }
+  </style>
+</head>
+<body>
+  <div class="sidebar">
+    <h2>ZuluMode</h2>
+    <a onclick="filterGender('Men')">Men</a>
+    <a onclick="filterGender('Women')">Women</a>
+    <a onclick="filterCategory('Accessories')">Accessories</a>
+    <a onclick="filterCategory('Dresses')">Dresses</a>
+    <a onclick="filterCategory('Tops')">Tops</a>
+    <a onclick="filterCategory('Bottoms')">Bottoms</a>
+    <a onclick="filterCategory('Two-Piece Sets')">Two-Piece Sets</a>
+    <a onclick="filterCategory('Jackets & Coats')">Jackets & Coats</a>
+    <a onclick="filterCategory('Activewear')">Activewear</a>
+    <a onclick="filterCategory('Swimwear')">Swimwear</a>
+    <a onclick="filterCategory('Lingerie')">Lingerie</a>
+    <a onclick="filterCategory('Plus Size')">Plus Size</a>
+    <a onclick="toggleCart()">Cart 🛒</a>
+  </div>
+  <div class="main">
+    <header>
+      <h1>ZuluMode Clothing</h1>
+    </header>
+    <div class="search-container">
+      <input type="text" id="searchInput" placeholder="Search for clothing..." onkeyup="searchProducts()" />
+    </div>
+    <form id="addForm">
+      <input type="text" id="name" placeholder="Clothing Name" required />
+      <input type="text" id="category" placeholder="Category (e.g. Tops)" required />
+      <input type="text" id="gender" placeholder="Gender (Men or Women)" required />
+      <input type="file" id="imageUpload" accept="image/*" required />
+      <button type="submit">Add Item</button>
+    </form>
+    <div id="productContainer" class="product-container"></div>
+  </div>
+  <div class="cart" id="cart">
+    <h3>Shopping Cart</h3>
+    <ul id="cartItems"></ul>
+    <strong>Total: R<span id="cartTotal">0</span></strong><br />
+    <button onclick="checkout()">Checkout</button>
+  </div>
+  <script>
+    const form = document.getElementById('addForm');
+    const container = document.getElementById('productContainer');
+    const cartBox = document.getElementById('cart');
+    const cartItems = document.getElementById('cartItems');
+    const cartTotal = document.getElementById('cartTotal');
+    const searchInput = document.getElementById('searchInput');
+
+    let cart = [];
+    let allProducts = [];
+
+    // Sample products matching your brand vision with gender property
+    const defaultDesigns = [
+      {
+        name: 'Zulu Oversized Tee',
+        img: 'https://i.imgur.com/Xee9R0F.jpg',
+        price: 350,
+        category: 'Tops',
+        gender: 'Men',
+      },
+      {
+        name: 'Relaxed Fit Street Pants',
+        img: 'https://i.imgur.com/nXqgEch.jpg',
+        price: 480,
+        category: 'Bottoms',
+        gender: 'Men',
+      },
+      {
+        name: 'Urban Polo Classic',
+        img: 'https://i.imgur.com/TykxVqt.jpg',
+        price: 390,
+        category: 'Tops',
+        gender: 'Men',
+      },
+      {
+        name: 'Flow Dress Minimal',
+        img: 'https://i.imgur.com/kzwYpDi.jpg',
+        price: 520,
+        category: 'Dresses',
+        gender: 'Women',
+      },
+      {
+        name: 'Black Hoodie Drop Cut',
+        img: 'https://i.imgur.com/NzRJ4G9.jpg',
+        price: 550,
+        category: 'Jackets & Coats',
+        gender: 'Women',
+      },
+      {
+        name: 'ZuluMode Windbreaker',
+        img: 'https://i.imgur.com/Jcy8kxY.jpg',
+        price: 600,
+        category: 'Jackets & Coats',
+        gender: 'Women',
+      },
+      {
+        name: 'Monochrome Active Set',
+        img: 'https://i.imgur.com/b2lBve8.jpg',
+        price: 460,
+        category: 'Activewear',
+        gender: 'Women',
+      },
+      {
+        name: 'ZuluMode Cropped Tank',
+        img: 'https://i.imgur.com/YfESF2e.jpg',
+        price: 280,
+        category: 'Lingerie',
+        gender: 'Women',
+      },
+      {
+        name: 'Tapered Joggers Plus',
+        img: 'https://i.imgur.com/HGbz2Ak.jpg',
+        price: 470,
+        category: 'Plus Size',
+        gender: 'Women',
+      },
+      {
+        name: 'Minimalist Cap Classic',
+        img: 'https://i.imgur.com/FgW2kRA.jpg',
+        price: 200,
+        category: 'Accessories',
+        gender: 'Men',
+      },
+    ];
+
+    defaultDesigns.forEach((item) =>
+      createProduct(item.name, item.img, item.price, item.category, item.gender)
+    );
+
+    function createProduct(name, imageURL, price = 400, category = 'Other', gender = '') {
+      const div = document.createElement('div');
+      div.className = 'product';
+      div.setAttribute('data-name', name.toLowerCase());
+      div.setAttribute('data-category', category);
+      div.setAttribute('data-gender', gender);
+      div.innerHTML = `
+        <img src="${imageURL}" alt="${name}" />
+        <h3>${name}</h3>
+        <p>R${price}</p>
+        <button onclick="removeProduct(this)">Remove</button>
+        <button class="cart-button" onclick="addToCart('${name}', ${price})">Add to Cart</button>
+      `;
+      container.appendChild(div);
+      allProducts.push(div);
+    }
+
+    function removeProduct(button) {
+      const product = button.parentElement;
+      product.remove();
+      allProducts = allProducts.filter((p) => p !== product);
+    }
+
+    form.addEventListener('submit', function (e) {
+      e.preventDefault();
+      const name = document.getElementById('name').value;
+      const category = document.getElementById('category').value || 'Other';
+      const gender = document.getElementById('gender').value || '';
+      const imageInput = document.getElementById('imageUpload');
+      const file = imageInput.files[0];
+      if (file) {
+        const reader = new FileReader();
+        reader.onload = function (event) {
+          createProduct(name, event.target.result, 400, category, gender);
+        };
+        reader.readAsDataURL(file);
+      }
+      form.reset();
+    });
+
+    function addToCart(name, price) {
+      cart.push({ name, price });
+      renderCart();
+    }
+
+    function renderCart() {
+      cartItems.innerHTML = '';
+      let total = 0;
+      cart.forEach((item) => {
+        total += item.price;
+        const li = document.createElement('li');
+        li.textContent = `${item.name} - R${item.price}`;
+        cartItems.appendChild(li);
+      });
+      cartTotal.textContent = total;
+      cartBox.style.display = 'block';
+    }
+
+    function toggleCart() {
+      cartBox.style.display = cartBox.style.display === 'none' ? 'block' : 'none';
+    }
+
+    function checkout() {
+      alert('Checkout feature is coming soon!');
+      cart = [];
+      renderCart();
+      cartBox.style.display = 'none';
+    }
+
+    function filterCategory(cat) {
+      allProducts.forEach((product) => {
+        const category = product.getAttribute('data-category');
+        const gender = product.getAttribute('data-gender');
+        if (category === cat) {
+          product.style.display = 'block';
+        } else {
+          product.style.display = 'none';
+        }
+      });
+    }
+
+    function filterGender(gender) {
+      allProducts.forEach((product) => {
+        const prodGender = product.getAttribute('data-gender');
+        if (prodGender.toLowerCase() === gender.toLowerCase()) {
+          product.style.display = 'block';
+        } else {
+          product.style.display = 'none';
+        }
+      });
+    }
+
+    function searchProducts() {
+      const query = searchInput.value.toLowerCase();
+      allProducts.forEach((product) => {
+        const name = product.getAttribute('data-name');
+        product.style.display = name.includes(query) ? 'block' : 'none';
+      });
+    }
+  </script>
+</body>
+</html>
