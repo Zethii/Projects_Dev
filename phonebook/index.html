@@ -84,7 +84,7 @@
 
                 for (let contact of data) {
                     output += `
-                        <tr>
+                        <tr class="contact-row" data-id="${contact.id}">
                             <td><img src="${rootPath}/controller/uploads/${contact.avatar || 'default.png'}" width="40"
                                 onerror="this.onerror=null;this.src='${rootPath}/controller/uploads/default.png';"></td>
                             <td>${contact.firstname || ''}</td>
@@ -95,6 +95,21 @@
 
                 output += "</table>";
                 document.getElementById("table").innerHTML = output;
+
+                // Attach click event listeners to each row
+                document.querySelectorAll(".contact-row").forEach(row => {
+                    row.addEventListener("click", function () {
+                        editContact(this.getAttribute("data-id"));
+                    });
+                });
+            }
+
+            function addContact() {
+                window.open("add-contact.html", "_self");
+            }
+
+            function editContact(id) {
+                window.open("edit-contact.html?id=" + id, "_self");
             }
         });
     </script>
